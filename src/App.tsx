@@ -455,7 +455,7 @@ function Dashboard({ posts, onEdit, onNew, onNavigate }) {
           <ST>Next 7 Days</ST>
           <button onClick={()=>onNavigate("calendar")} style={{background:"none",border:"none",color:NU_RED,fontSize:"12px",cursor:"pointer",fontWeight:500}}>View Calendar →</button>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"8px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,minmax(0,1fr))",gap:"8px"}}>
           {days.map((d,i)=>{
             const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
             const dp=byDate[ds]||[];
@@ -795,7 +795,9 @@ function ListView({ posts, allYearPosts, filter, setFilter, collapsedMonths, set
   if(groups["unscheduled"]){groupKeys.splice(groupKeys.indexOf("unscheduled"),1);groupKeys.push("unscheduled");}
   const allGroupKeys=[...new Set(allYearPosts.map(p=>dateGroupKey(p.date)))].sort();
   const nextStatus=s=>{const i=STATUSES.indexOf(s);return i<STATUSES.length-1?STATUSES[i+1]:null;};
-  const toggleCollapse=k=>setCollapsedMonths(c=>({...c,[k]:!c[k]}));
+  const toggleCollapse=k=>setCollapsedMonths(c=>({...c,[k]:!isCollapsed(k)}));
+  const currentYM=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,"0")}`;
+  const isCollapsed=(k:string)=>collapsedMonths[k]!==undefined?!!collapsedMonths[k]:k!=="unscheduled"&&k<currentYM;
   return (
     <div>
       <div style={{display:"flex",gap:"8px",marginBottom:"16px",alignItems:"center",flexWrap:"wrap"}}>
@@ -807,19 +809,19 @@ function ListView({ posts, allYearPosts, filter, setFilter, collapsedMonths, set
       </div>
       {sorted.length===0&&<div style={{background:"white",borderRadius:"10px",padding:"50px",textAlign:"center",color:"#94a3b8",boxShadow:"0 1px 3px rgba(0,0,0,0.06)"}}>No posts match your filters.</div>}
       {groupKeys.map(gk=>{
-        const isCollapsed=!!collapsedMonths[gk];
+        const collapsed=isCollapsed(gk);
         return (
           <div key={gk} style={{marginBottom:"18px"}}>
             <div style={{display:"flex",alignItems:"center",gap:"10px",marginBottom:"6px"}}>
               <div onClick={()=>toggleCollapse(gk)} style={{display:"flex",alignItems:"center",gap:"8px",cursor:"pointer",userSelect:"none",flex:1,minWidth:0}}>
-                <span style={{fontSize:"11px",color:"#94a3b8",display:"inline-block",transform:isCollapsed?"rotate(-90deg)":"rotate(0deg)",transition:"transform 0.15s",flexShrink:0}}>▼</span>
+                <span style={{fontSize:"11px",color:"#94a3b8",display:"inline-block",transform:collapsed?"rotate(-90deg)":"rotate(0deg)",transition:"transform 0.15s",flexShrink:0}}>▼</span>
                 <span style={{fontWeight:700,fontSize:"15px",color:NU_RED,whiteSpace:"nowrap"}}>{fmtKey(gk)}</span>
                 <span style={{fontSize:"11px",color:"#94a3b8",background:"#f1f5f9",borderRadius:"20px",padding:"2px 8px",whiteSpace:"nowrap"}}>{groups[gk].length} post{groups[gk].length!==1?"s":""}</span>
                 <div style={{flex:1,height:"1px",background:"#e2e8f0"}}></div>
               </div>
               <button onClick={()=>onNewForMonth(gk)} style={{background:NU_RED,color:"white",border:"none",borderRadius:"6px",padding:"5px 13px",fontSize:"12px",fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>+ Add</button>
             </div>
-            {!isCollapsed&&<div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
+            {!collapsed&&<div style={{display:"flex",flexDirection:"column",gap:"6px"}}>
               {groups[gk].map(p=>{
                 const ns=nextStatus(p.status);
                 const deadlineSoon=p.priority&&p.deadline&&((new Date(p.deadline)-new Date())/(1000*60*60*24))<7;
@@ -886,7 +888,7 @@ function CalView({ posts, calDate, setCalDate, onEdit, onDayClick }) {
         <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",background:"#fafafa",borderBottom:"1px solid #e2e8f0"}}>
           {DAYS.map(d=><div key={d} style={{padding:"10px 8px",textAlign:"center",fontSize:"11px",fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:"0.05em"}}>{d}</div>)}
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,minmax(0,1fr))"}}>
           {cells.map((day,i)=>{
             const ds=day?`${y}-${String(m+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`:null;
             const dp=ds?(byDate[ds]||[]):[];
